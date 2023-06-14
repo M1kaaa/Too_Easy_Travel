@@ -1,7 +1,8 @@
 from keyboards.reply.contact import request_contact
 from loader import bot
-from states.contact_information import UserInfoState
+from states.userinfo import UserInfoState
 from telebot.types import Message
+import json
 
 @bot.message_handler(commands=['survey'])
 def survey(message: Message) -> None:
@@ -47,9 +48,14 @@ def get_city(message: Message) -> None:
 def get_contact(message: Message) -> None:
     if message.content_type == 'contact':
         with bot.retrieve_data(message.from_user.id, message.chat.id) as data:
+            bot.set_state(message.from_user.id, None, message.chat.id)
             data['phone_number'] = message.contact.phone_number
             text = 'Спасибо за инфу, ваши данные: \n' \
                    f'Имя: {data["name"]}\nВозраст: {data["age"]}\nСтрана: {data["country"]}\nГород: {data["city"]}\nНомер телефона: {data["phone_number"]}'
             bot.send_message(message.from_user.id, text)
+        
+            with open('data.json', 'a') as f:
+                f.write(json.dumps(data))
+
     else:
         bot.send_message(message.from_user.id, 'Чтобы отправить контактную информацию нажми на кнопку')
